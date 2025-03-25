@@ -1,0 +1,8 @@
+---
+
+- hosts: rpi4
+  become: true
+  roles:
+    - role: secured_rpi
+      vars:
+        secured_user: "{{ rpi4.ansible_user }}"

@@ -1,0 +1,4 @@
+---
+
+rpi4:
+  ansible_user: pi

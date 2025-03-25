@@ -1,0 +1,10 @@
+---
+
+- name: Configure user {{ ansible_username }}
+  import_tasks: user_config.yml
+
+- name: Configure SSH
+  import_tasks: sshd_config.yml
+
+# TODO: install firewall
+# TODO: install fail2ban

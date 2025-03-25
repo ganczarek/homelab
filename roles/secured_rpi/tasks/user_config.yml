@@ -1,0 +1,19 @@
+- name: Remove '{{ secured_user }}' from sudoers
+  file:
+    state: absent
+    path: /etc/sudoers.d/010_{{ secured_user }}-nopasswd
+
+- name: Determine available groups
+  getent:
+    database: group
+
+- name: Set groups of user {{ secured_user }}
+  user:
+    name: "{{ secured_user }}"
+    groups: "{{ ['sudo', 'users', 'docker'] | intersect(ansible_facts['getent_group'] | list) }}"
+    append: false
+
+- name: Require sudo password from {{ secured_user }}
+  copy:
+    content: "{{ ansible_user }} ALL=(ALL) PASSWD: ALL"
+    dest: /etc/sudoers.d/010_{{ ansible_user }}-passwd

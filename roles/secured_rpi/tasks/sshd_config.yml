@@ -1,0 +1,26 @@
+---
+
+- name: Tighten sshd configuration
+  lineinfile:
+    path: "/etc/ssh/sshd_config"
+    regex: "^(#)?{{item.key}}"
+    line: "{{item.key}} {{item.value}}"
+    state: present
+  loop:
+    - { key: "AllowUsers", value: "{{ secured_user }}" }
+    - { key: "PermitRootLogin", value: "no" }
+    - { key: "PasswordAuthentication", value: "no" }
+    - { key: "ChallengeResponseAuthentication", value: "no" }
+    - { key: "UsePAM", value: "no" }
+  notify:
+    - restart sshd
+
+- name: Create daily cron job to update OpenSSH
+  cron:
+    minute: "0"
+    hour: "0"
+    name: Keeps OpenSSH server up to date
+    user: root
+    job: apt install openssh-server
+
+

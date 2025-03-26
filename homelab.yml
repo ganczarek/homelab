@@ -6,3 +6,7 @@
     - role: secured_rpi
       vars:
         secured_user: "{{ rpi4.ansible_user }}"
+    - role: docker
+      vars:
+        docker_root: "{{ ssd_mount }}/docker"
+        docker_users: ["{{ rpi4.ansible_user }}"]

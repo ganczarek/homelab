@@ -2,3 +2,5 @@
 
 rpi4:
   ansible_user: pi
+  
+ssd_mount: /media/DataSSD

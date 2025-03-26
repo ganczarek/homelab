@@ -1,0 +1,39 @@
+---
+
+- name: Install Docker packages
+  ansible.builtin.package:
+    name:
+      - docker
+      - docker-compose
+    state: present
+
+- name: Ensure Docker group exists
+  ansible.builtin.group:
+    name: docker
+    state: present
+
+- name: Add users to Docker group
+  ansible.builtin.user:
+    name: "{{ item }}"
+    groups: docker
+    append: true
+  loop: "{{ docker_users }}"
+
+- name: Enable Docker service
+  ansible.builtin.service:
+    name: docker
+    enabled: true
+    state: started
+
+- name: Create custom docker network
+  community.docker.docker_network:
+    name: homelab
+    state: present
+    driver: bridge
+
+- name: Create Docker config
+  template:
+    src: "templates/daemon.json.j2"
+    dest: "/etc/docker/daemon.json"
+  notify:
+    - restart docker

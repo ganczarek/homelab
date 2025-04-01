@@ -1,6 +1,9 @@
 ---
 
+ansible_python_interpreter: /usr/bin/python3
+
 rpi4:
   ansible_user: pi
-  
+
 ssd_mount: /media/DataSSD
+docker_mounts_dir: "{{ ssd_mount }}/docker-mounts"

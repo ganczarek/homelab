@@ -1,0 +1,44 @@
+---
+
+- name: Create Traefik directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ traefik_mount_dir }}"
+    - "{{ traefik_mount_dir }}/data"
+    - "{{ traefik_mount_dir }}/logs"
+
+- name: Deploy Traefik Docker container
+  community.docker.docker_container:
+    name: traefik
+    image: traefik:latest
+    restart_policy: unless-stopped
+    state: started
+    security_opts:
+      - no-new-privileges:true
+    networks:
+      - name: homelab
+    env:
+      TZ: '{{ tz }}'
+    command:
+      - "--global.checkNewVersion=true"
+      - "--global.sendAnonymousUsage=false"
+      - "--api=true"
+      - "--api.dashboard=true"
+      - "--api.insecure=true"  # TODO
+      - "--log.level=INFO"
+      - "--log.filePath=/logs/traefik.log"
+      - "--accesslog=true"
+      - "--accesslog.filepath=/logs/access.log"
+      - "--providers.docker=true"
+      - "--providers.docker.endpoint=unix:///var/run/docker.sock"
+      - "--providers.docker.exposedByDefault=false"
+      - "--providers.docker.watch=true"
+    ports:
+      - "8080:8080" # The Web UI (enabled by --api.insecure=true)
+    volumes:
+      - '/var/run/docker.sock:/var/run/docker.sock:ro'
+      - '{{ traefik_mount_dir }}/data:/data'
+      - '{{ traefik_mount_dir }}/logs:/logs'

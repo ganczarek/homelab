@@ -7,6 +7,10 @@
       vars:
         secured_user: "{{ rpi4.ansible_user }}"
     - role: docker
+      tags: [ docker ]
       vars:
         docker_root: "{{ ssd_mount }}/docker"
         docker_users: ["{{ rpi4.ansible_user }}"]
+    - role: traefik
+      tags: [ traefik ]
+      

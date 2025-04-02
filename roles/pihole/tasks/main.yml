@@ -59,9 +59,10 @@
       "host.docker.internal": "{{ local_ip }}" 
     labels:
       traefik.enable: "true"
-      traefik.http.routers.pihole.entrypoints: "http"
       traefik.http.routers.pihole.rule: "Host(`pihole.{{ domain }}`)"
       traefik.http.routers.pihole.service: "pihole"
+      traefik.http.routers.pihole.tls: "true"
+      traefik.http.routers.pihole.tls.certresolver: "letsencrypt"
       traefik.http.services.pihole.loadBalancer.server.port: "8068"
       traefik.http.routers.pihole.middlewares: "pihole-admin-redirect"
       traefik.http.middlewares.pihole-admin-redirect.redirectregex.regex: '^(http:\/\/(\[[\w:.]+\]|[\w\._-]+)(:\d+)?)\/$'

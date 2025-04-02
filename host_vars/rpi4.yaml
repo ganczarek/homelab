@@ -6,6 +6,7 @@ ansible_user: pi
 tailscale_ip: "{{ lookup('env', 'rpi4_tailscale_ip') }}"
 local_ip: "{{ lookup('env', 'rpi4_local_ip') }}"
 pihole_webserver_api_password: "{{ lookup('env', 'pihole_webserver_api_password') }}"
+cloudflare_dns_api_token: "{{ lookup('env', 'cloudflare_dns_api_token')}}"
 
 ssd_mount: /media/DataSSD
 docker_mounts_dir: "{{ ssd_mount }}/docker-mounts"

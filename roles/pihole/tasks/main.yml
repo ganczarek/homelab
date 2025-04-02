@@ -24,8 +24,8 @@
     
 - name: Configure split DNS
   template:
-    src: "templates/dnsmasq.d/99-split-dns.conf.j2"
-    dest: "{{ pihole_mount_dir }}/dnsmasq.d/99-split-dns.conf"
+    src: "templates/dnsmasq.d/99-host-records.conf.j2"
+    dest: "{{ pihole_mount_dir }}/dnsmasq.d/99-host-records.conf"
   register: restart_pihole_container
 
 - name: Pi-hole container

@@ -27,7 +27,6 @@
       - "--global.sendAnonymousUsage=false"
       - "--api=true"
       - "--api.dashboard=true"
-      - "--api.insecure=true"  # TODO
       - "--log.level=INFO"
       - "--log.filePath=/logs/traefik.log"
       - "--accesslog=true"
@@ -36,10 +35,20 @@
       - "--providers.docker.endpoint=unix:///var/run/docker.sock"
       - "--providers.docker.exposedByDefault=false"
       - "--providers.docker.watch=true"
+      - "--entrypoints.http.address=:80"
     ports:
-      - "8080:8080" # The Web UI (enabled by --api.insecure=true)
       - "80:80"
     volumes:
       - '/var/run/docker.sock:/var/run/docker.sock:ro'
       - '{{ traefik_mount_dir }}/data:/data'
       - '{{ traefik_mount_dir }}/logs:/logs'
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.traefik-dashboard.entrypoints: "http"
+      traefik.http.routers.traefik-dashboard.rule: "Host(`traefik.{{ domain }}`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
+      traefik.http.routers.traefik-dashboard.service: "api@internal"
+      traefik.http.routers.traefik-dashboard.middlewares: "traefik-dashboard-redirect"
+      traefik.http.middlewares.traefik-dashboard-redirect.redirectregex.regex: '^(http:\/\/(\[[\w:.]+\]|[\w\._-]+)(:\d+)?)\/$'
+      traefik.http.middlewares.traefik-dashboard-redirect.redirectregex.replacement: "${1}/dashboard/"
+      traefik.http.middlewares.traefik-dashboard-redirect.redirectregex.permanent: "true"
+

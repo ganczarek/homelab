@@ -2,8 +2,13 @@
 
 ansible_python_interpreter: /usr/bin/python3
 
-rpi4:
-  ansible_user: pi
+ansible_user: pi
+tailscale_ip: "{{ lookup('env', 'rpi4_tailscale_ip') }}"
+local_ip: "{{ lookup('env', 'rpi4_local_ip') }}"
+pihole_webserver_api_password: "{{ lookup('env', 'pihole_webserver_api_password') }}"
 
 ssd_mount: /media/DataSSD
 docker_mounts_dir: "{{ ssd_mount }}/docker-mounts"
+
+pihole_uid:      "10012"
+pihole_gid:      "10013"

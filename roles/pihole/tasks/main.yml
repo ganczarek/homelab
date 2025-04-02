@@ -1,0 +1,65 @@
+- name: Ensure group 'pihole' exists with correct gid
+  ansible.builtin.group:
+    name: pihole
+    state: present
+    gid: "{{ pihole_gid }}"
+
+- name: Add the user 'pihole'
+  ansible.builtin.user:
+    name: pihole
+    uid: "{{ pihole_uid }}"
+    group: pihole
+
+- name: Create pihole directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: pihole
+    group: pihole
+    mode: 0775
+  with_items:
+    - "{{ pihole_mount_dir }}"
+    - "{{ pihole_mount_dir }}/etc"
+    - "{{ pihole_mount_dir }}/dnsmasq.d"
+    
+- name: Configure split DNS
+  template:
+    src: "templates/dnsmasq.d/99-split-dns.conf.j2"
+    dest: "{{ pihole_mount_dir }}/dnsmasq.d/99-split-dns.conf"
+  register: restart_pihole_container
+
+- name: Pi-hole container
+  community.docker.docker_container:
+    name: pihole
+    image: pihole/pihole:latest
+    pull: always
+    restart_policy: unless-stopped
+    restart: "{{ restart_pihole_container.changed | default(false) }}"
+    capabilities: # See https://github.com/pi-hole/docker-pi-hole#note-on-capabilities
+      - SYS_NICE # Pi-hole should get more processing time if it's running low
+    volumes:
+      - "{{ pihole_mount_dir }}/etc:/etc/pihole"
+      - "{{ pihole_mount_dir }}/dnsmasq.d:/etc/dnsmasq.d"  # Needs FTLCONF_misc_etc_dnsmasq_d=true
+    env:
+      PIHOLE_UID: "{{ pihole_uid }}"
+      PIHOLE_GID: "{{ pihole_gid }}"
+      UMASK: "002"
+      TZ: "{{ tz }}"
+      FTLCONF_webserver_api_password: "{{ pihole_webserver_api_password }}"
+      FTLCONF_dns_listeningMode: "all"
+      FTLCONF_misc_etc_dnsmasq_d: "true"
+      FTLCONF_dns_upstreams: "9.9.9.9;149.112.112.112" # Quad9 (filtered, DNSSEC)
+      FTLCONF_webserver_port: "8068" # o (optional), s (ssl), r (redirect to ssl)
+      FTLCONF_dhcp_active: "false"
+    network_mode: "host"
+    etc_hosts:
+      # Without below mapping Traefik's Docker provider would use 127.0.0.1 as
+      # PiHole's IP address. It must use host's IP because container uses host network.
+      # See https://github.com/traefik/traefik/blob/master/docs/content/providers/docker.md#host-networking
+      "host.docker.internal": "{{ local_ip }}" 
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.pihole.entrypoints: "http"
+      traefik.http.routers.pihole.rule: "Host(`pihole.{{ domain }}`)"
+      traefik.http.routers.pihole.service: "pihole"
+      traefik.http.services.pihole.loadBalancer.server.port: "8068"

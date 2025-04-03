@@ -29,6 +29,8 @@ access_control:
       policy: "one_factor"
     - domain: "traefik.{{ domain }}"
       policy: "one_factor"
+    - domain: "pihole.{{ domain }}"
+      policy: "one_factor"
 
 session:
   name: authelia_session

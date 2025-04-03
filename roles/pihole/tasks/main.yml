@@ -45,7 +45,7 @@
       PIHOLE_GID: "{{ pihole_gid }}"
       UMASK: "002"
       TZ: "{{ tz }}"
-      FTLCONF_webserver_api_password: "{{ pihole_webserver_api_password }}"
+      FTLCONF_webserver_api_password: ""
       FTLCONF_dns_listeningMode: "all"
       FTLCONF_misc_etc_dnsmasq_d: "true"
       FTLCONF_dns_upstreams: "9.9.9.9;149.112.112.112" # Quad9 (filtered, DNSSEC)
@@ -64,7 +64,7 @@
       traefik.http.routers.pihole.tls: "true"
       traefik.http.routers.pihole.tls.certresolver: "letsencrypt"
       traefik.http.services.pihole.loadBalancer.server.port: "8068"
-      traefik.http.routers.pihole.middlewares: "pihole-admin-redirect"
-      traefik.http.middlewares.pihole-admin-redirect.redirectregex.regex: '^(http:\/\/(\[[\w:.]+\]|[\w\._-]+)(:\d+)?)\/$'
+      traefik.http.routers.pihole.middlewares: "authelia,pihole-admin-redirect"
+      traefik.http.middlewares.pihole-admin-redirect.redirectregex.regex: '^(https:\/\/(\[[\w:.]+\]|[\w\._-]+)(:\d+)?)\/$'
       traefik.http.middlewares.pihole-admin-redirect.redirectregex.replacement: "${1}/admin/"
       traefik.http.middlewares.pihole-admin-redirect.redirectregex.permanent: "true"

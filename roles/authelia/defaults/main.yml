@@ -1,0 +1,3 @@
+---
+
+authelia_mount_dir: "{{ docker_mounts_dir }}/authelia"

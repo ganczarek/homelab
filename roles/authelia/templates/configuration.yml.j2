@@ -1,0 +1,60 @@
+jwt_secret: "{{ authelia_jwt_secret }}"
+
+server:
+  address: tcp://0.0.0.0:9091/auth
+
+log:
+  level: info
+  file_path: "/var/log/authelia/authelia.log"
+  keep_stdout: true
+
+authentication_backend:
+  file:
+    path: "/config/users.yml"
+    watch: true
+    password:
+      algorithm: "argon2"
+      argon2:
+        variant: "argon2id"
+        iterations: 10
+        memory: 65535
+        parallelism: 4
+        key_length: 32
+        salt_length: 16
+
+access_control:
+  default_policy: "deny"
+  rules:
+    - domain: "authelia.{{ domain }}"
+      policy: "one_factor"
+    - domain: "traefik.{{ domain }}"
+      policy: "one_factor"
+
+session:
+  name: authelia_session
+  secret: "{{ authelia_session_secret }}"
+  expiration: 3600 # 1 hour
+  inactivity: 300 # 5 minutes
+  cookies:
+    - domain: "{{ domain }}"
+      authelia_url: "https://authelia.{{ domain }}"
+
+regulation:
+  max_retries: 5
+  find_time: 120
+  ban_time: 300
+
+storage:
+  encryption_key: "{{ authelia_storage_encryption_key }}"
+  local:
+    path: /config/db.sqlite3
+
+notifier:
+  disable_startup_check: false
+  filesystem:
+    filename: "/config/notification.txt"
+
+password_policy:
+  zxcvbn:
+    enabled: true
+    min_score: 4

@@ -1,0 +1,46 @@
+---
+
+- name: Create Authelia directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - "{{ authelia_mount_dir }}"
+    - "{{ authelia_mount_dir }}/config"
+    - "{{ authelia_mount_dir }}/logs"
+
+
+- name: Create Authelia configuration file
+  template:
+    src: "templates/{{ item }}.j2"
+    dest: "{{ authelia_mount_dir }}/config/{{ item }}"
+    mode: "0644"
+  loop:
+    - "configuration.yml"
+    - "users.yml"
+  register: restart_authelia_container
+
+- name: Deploy Authelia Docker container
+  community.docker.docker_container:
+    name: authelia
+    image: authelia/authelia:latest
+    pull: always
+    restart_policy: unless-stopped
+    restart: "{{ restart_authelia_container.changed | default(false) }}"
+    networks:
+      - name: homelab
+    volumes:
+      - "{{ authelia_mount_dir }}/config:/config"
+      - "{{ authelia_mount_dir }}/logs:/var/log/authelia"
+    env:
+      TZ: '{{ tz }}'
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.authelia.rule: "Host(`authelia.{{ domain }}`)"
+      traefik.http.routers.authelia.tls: "true"
+      traefik.http.routers.authelia.tls.certresolver: "letsencrypt"
+      traefik.http.services.authelia.loadbalancer.server.port: "9091"
+      traefik.http.middlewares.authelia.forwardAuth.address: 'http://authelia:9091/api/authz/forward-auth'
+      traefik.http.middlewares.authelia.forwardAuth.trustForwardHeader: 'true'
+      traefik.http.middlewares.authelia.forwardAuth.authResponseHeaders: 'Remote-User,Remote-Groups,Remote-Email,Remote-Name'

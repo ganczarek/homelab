@@ -10,6 +10,15 @@
     - "{{ traefik_mount_dir }}/letsencrypt"
     - "{{ traefik_mount_dir }}/logs"
 
+- name: Get Authelia container info
+  docker_container_info:
+    name: authelia
+  register: authelia_container_info
+
+- name: Get Authelia container IP
+  ansible.builtin.set_fact:
+    authelia_container_ip: '{{ authelia_container_info.container.NetworkSettings.Networks["homelab"].IPAddress }}'
+
 - name: Deploy Traefik Docker container
   community.docker.docker_container:
     name: traefik
@@ -39,8 +48,16 @@
       - "--entrypoints.web.address=:80"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
+      - "--entrypoints.web.forwardedHeaders.insecure=false"
+      - "--entrypoints.web.proxyProtocol.insecure=false"
+      - "--entrypoints.web.forwardedHeaders.trustedIPs={{ authelia_container_ip }}"
+      - "--entrypoints.web.proxyProtocol.trustedIPs={{ authelia_container_ip }}"
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.websecure.asDefault=true"
+      - "--entrypoints.websecure.forwardedHeaders.insecure=false"
+      - "--entrypoints.websecure.proxyProtocol.insecure=false"
+      - "--entrypoints.websecure.forwardedHeaders.trustedIPs={{ authelia_container_ip }}"
+      - "--entrypoints.websecure.proxyProtocol.trustedIPs={{ authelia_container_ip }}"
       # Let's Encrypt config
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge=true"
       - "--certificatesresolvers.letsencrypt.acme.dnschallenge.provider=cloudflare"
@@ -55,12 +72,12 @@
       - '{{ traefik_mount_dir }}/logs:/logs'
     labels:
       traefik.enable: "true"
-      traefik.http.routers.traefik-dashboard.rule: "Host(`traefik.{{ domain }}`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
+      traefik.http.routers.traefik-dashboard.rule: "Host(`traefik.{{ domain }}`) && (Path(`/`) || PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
       traefik.http.routers.traefik-dashboard.service: "api@internal"
       traefik.http.routers.traefik-dashboard.tls: "true"
       traefik.http.routers.traefik-dashboard.tls.certresolver: "letsencrypt"
-      traefik.http.routers.traefik-dashboard.middlewares: "traefik-dashboard-redirect"
-      traefik.http.middlewares.traefik-dashboard-redirect.redirectregex.regex: '^(http:\/\/(\[[\w:.]+\]|[\w\._-]+)(:\d+)?)\/$'
+      traefik.http.routers.traefik-dashboard.middlewares: "authelia,traefik-dashboard-redirect"
+      traefik.http.middlewares.traefik-dashboard-redirect.redirectregex.regex: '^(https:\/\/(\[[\w:.]+\]|[\w\._-]+)(:\d+)?)\/$'
       traefik.http.middlewares.traefik-dashboard-redirect.redirectregex.replacement: "${1}/dashboard/"
       traefik.http.middlewares.traefik-dashboard-redirect.redirectregex.permanent: "true"
 

@@ -11,6 +11,8 @@
       vars:
         docker_root: "{{ ssd_mount }}/docker"
         docker_users: ["{{ ansible_user }}"]
+    - role: authelia
+      tags: [ authelia ]
     - role: traefik
       tags: [ traefik ]
     - role: pihole

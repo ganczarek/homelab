@@ -1,0 +1,44 @@
+---
+
+- name: Create Certbot directory
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ certbot_mount_dir }}"
+    - "{{ certbot_mount_dir }}/letsencrypt"
+    - "{{ certbot_mount_dir }}/logs"
+
+- name: Create Cloudflare config file
+  copy:
+    dest: "{{ certbot_mount_dir }}/cloudflare.ini"
+    content: |
+      dns_cloudflare_api_token={{ cloudflare_dns_api_token }}
+
+- name: Deploy Certbot Docker container
+  community.docker.docker_container:
+    name: certbot
+    image: certbot/dns-cloudflare:latest
+    pull: always
+    state: present
+    volumes:
+      - "{{ certbot_mount_dir }}/cloudflare.ini:/cloudflare.ini:ro"
+      - "{{ certbot_mount_dir }}/letsencrypt:/etc/letsencrypt"
+      - "{{ certbot_mount_dir }}/logs:/var/log/letsencrypt"
+    command:
+      - "certonly"
+      - "--non-interactive"
+      - "--agree-tos"
+      - "--dns-cloudflare"
+      - "--dns-cloudflare-credentials"
+      - "/cloudflare.ini"
+      - "-d"
+      - "dns-over-tls.{{ domain }}"
+
+- name: Create daily cron job to update certificates
+  cron:
+    minute: "0"
+    hour: "0"
+    name: Keeps certificates up to date
+    user: root
+    job: docker start certbot

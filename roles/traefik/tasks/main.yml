@@ -37,14 +37,17 @@
       - "--global.sendAnonymousUsage=false"
       - "--api=true"
       - "--api.dashboard=true"
+      # Logging
       - "--log.level=INFO"
       - "--log.filePath=/logs/traefik.log"
       - "--accesslog=true"
       - "--accesslog.filepath=/logs/access.log"
+      # Docker provider
       - "--providers.docker=true"
       - "--providers.docker.endpoint=unix:///var/run/docker.sock"
       - "--providers.docker.exposedByDefault=false"
       - "--providers.docker.watch=true"
+      # HTTP endpoint
       - "--entrypoints.web.address=:80"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
       - "--entrypoints.web.http.redirections.entrypoint.scheme=https"
@@ -52,6 +55,7 @@
       - "--entrypoints.web.proxyProtocol.insecure=false"
       - "--entrypoints.web.forwardedHeaders.trustedIPs={{ authelia_container_ip }}"
       - "--entrypoints.web.proxyProtocol.trustedIPs={{ authelia_container_ip }}"
+      # HTTPS endpoint
       - "--entrypoints.websecure.address=:443"
       - "--entrypoints.websecure.asDefault=true"
       - "--entrypoints.websecure.forwardedHeaders.insecure=false"

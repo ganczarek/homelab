@@ -1,0 +1,32 @@
+- name: Create Nginx directory
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ nginx_mount_dir }}"
+    - "{{ nginx_mount_dir }}/etc"
+    - "{{ nginx_mount_dir }}/logs"
+
+- name: Create Nginx config
+  template:
+    src: "{{ role_path }}/templates/nginx.conf.j2"
+    dest: "{{ nginx_mount_dir }}/etc/nginx.conf"
+  register: restart_nginx_container
+
+- name: Nginx container
+  docker_container:
+    name: nginx
+    image: nginx:stable
+    pull: true
+    restart_policy: unless-stopped
+    restart: "{{ restart_nginx_container.changed | default(false) }}"
+    capabilities:
+      - NET_ADMIN
+    networks:
+      - name: homelab
+    volumes:
+      - "{{ nginx_mount_dir }}/etc:/etc/nginx"
+      - "{{ nginx_mount_dir }}/logs:/etc/nginx/logs"
+      - "{{ certbot_mount_dir }}/letsencrypt:/etc/letsencrypt:ro"
+    ports:
+      - "853:853/tcp"

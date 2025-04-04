@@ -1,0 +1,4 @@
+---
+
+nginx_mount_dir: "{{ docker_mounts_dir }}/nginx"
+certbot_mount_dir: "{{ docker_mounts_dir }}/certbot"

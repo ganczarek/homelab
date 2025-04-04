@@ -1,0 +1,22 @@
+error_log  /etc/nginx/logs/error.log;
+worker_processes auto;
+pid /run/nginx.pid;
+
+events {
+  worker_connections 1024;
+}
+
+stream {
+  upstream dns {
+    zone dns 64k;
+    server {{ local_ip }}:53;
+  }
+
+  server {
+    listen 853 ssl;
+    proxy_pass dns;
+
+    ssl_certificate     /etc/letsencrypt/live/dns-over-tls.{{ domain }}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/dns-over-tls.{{ domain }}/privkey.pem;
+  }
+}

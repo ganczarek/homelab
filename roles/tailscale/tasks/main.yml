@@ -1,0 +1,61 @@
+---
+
+- name: Ensure group 'tailscale' exists with correct gid
+  ansible.builtin.group:
+    name: tailscale
+    state: present
+    gid: "{{ tailscale_gid }}"
+
+- name: Add the user 'tailscale'
+  ansible.builtin.user:
+    name: tailscale
+    uid: "{{ tailscale_uid }}"
+    group: tailscale
+
+- name: Create tailscale directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: tailscale
+    group: tailscale
+    mode: 0775
+  with_items:
+    - "{{ tailscale_mount_dir }}"
+    - "{{ tailscale_mount_dir }}/state"
+
+- name: Tailscale container
+  community.docker.docker_container:
+    name: tailscale
+    image: ghcr.io/tailscale/tailscale:stable
+    pull: true
+    restart_policy: unless-stopped
+    healthcheck:
+      test: [ "CMD-SHELL", "tailscale --socket /tmp/tailscaled.sock status | grep $(hostname -s) | grep -vq offline" ]
+      interval: 60s
+      timeout: 15s
+      retries: 5
+    capabilities:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - "{{ tailscale_mount_dir }}/state:/var/lib/tailscale"
+      - /dev/net/tun:/dev/net/tun
+    env:
+      TS_AUTHKEY: "{{ tailscale_auth_key }}"
+      TS_STATE_DIR: "/var/lib/tailscale"
+      PUID: "{{ tailscale_uid }}"
+      PGID: "{{ tailscale_gid }}"
+      UMASK: "002"
+      TZ: "{{ tz }}"
+      TS_EXTRA_ARGS: "--ssh"
+      TS_ACCEPT_DNS: "false"
+      TS_USERSPACE: "false"
+    network_mode: "host"
+
+- name: Restart unhealthy tailscale containers
+  ansible.builtin.cron:
+    name: "restart unhealthy tailscale container"
+    minute: "*/15"
+    user: root
+    job: "docker ps -q -f name=tailscale -f health=unhealthy | xargs --no-run-if-empty docker restart > /dev/null"
+    cron_file: ansible_tailscale-restart-unhealthy

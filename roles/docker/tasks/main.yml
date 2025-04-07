@@ -19,6 +19,23 @@
     append: true
   loop: "{{ docker_users }}"
 
+- name: Create Docker systemd override directory
+  ansible.builtin.file:
+    path: "/etc/systemd/system/docker.service.d"
+    state: directory
+
+# https://gist.github.com/styblope/dc55e0ad2a9848f2cc3307d4819d819f
+- name: Override Docker's systemd config
+  copy:
+    dest: "/etc/systemd/system/docker.service.d/override.conf"
+    content: |
+      [Service]
+      ExecStart=
+      ExecStart=/usr/bin/dockerd --config-file /etc/docker/daemon.json
+  notify:
+    - systemd daemon reload
+    - restart docker
+
 - name: Enable Docker service
   ansible.builtin.service:
     name: docker

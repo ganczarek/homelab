@@ -1,3 +1,4 @@
 {
-  "data-root": "{{ docker_root }}"
+  "data-root": "{{ docker_root }}",
+  "hosts": ["tcp://0.0.0.0:2375", "unix:///var/run/docker.sock"]
 }

@@ -68,3 +68,7 @@
       traefik.http.middlewares.pihole-admin-redirect.redirectregex.regex: '^(https:\/\/(\[[\w:.]+\]|[\w\._-]+)(:\d+)?)\/$'
       traefik.http.middlewares.pihole-admin-redirect.redirectregex.replacement: "${1}/admin/"
       traefik.http.middlewares.pihole-admin-redirect.redirectregex.permanent: "true"
+      homepage.group: Networking
+      homepage.name: Pi-hole
+      homepage.href: https://pihole.{{ domain }}/
+      homepage.icon: sh-pi-hole

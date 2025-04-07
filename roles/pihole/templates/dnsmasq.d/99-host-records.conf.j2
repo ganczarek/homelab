@@ -1,6 +1,6 @@
 localise-queries
 
-{% for item in ["", "pihole", "traefik", "authelia"] %}
+{% for item in ["", "pihole", "traefik", "authelia", "homepage"] %}
 host-record={{ item + '.' if item else '' }}{{ domain }},{{ local_ip }}
 host-record={{ item + '.' if item else '' }}{{ domain }},{{ tailscale_ip }}
 {% endfor %}

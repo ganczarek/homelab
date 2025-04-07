@@ -1,0 +1,77 @@
+---
+
+- name: Ensure group 'homepage' exists with correct gid
+  ansible.builtin.group:
+    name: homepage
+    state: present
+    gid: "{{ homepage_gid }}"
+
+- name: Add the user 'homepage'
+  ansible.builtin.user:
+    name: homepage
+    uid: "{{ homepage_uid }}"
+    groups: homepage,docker
+
+- name: Create homepage directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: homepage
+    group: homepage
+    mode: 0775
+  with_items:
+    - "{{ homepage_mount_dir }}"
+    - "{{ homepage_mount_dir }}/config"
+
+- name: Create Homepage config files
+  template:
+    src: "templates/{{ item }}.j2"
+    dest: "{{ homepage_mount_dir }}/config/{{ item }}"
+    owner: homepage
+    group: homepage
+    mode: "0644"
+  loop:
+    - "docker.yaml"
+    - "services.yaml"
+    - "settings.yaml"
+    - "widgets.yaml"
+    - "bookmarks.yaml"
+
+- name: DockerProxy container
+  community.docker.docker_container:
+    name: dockerproxy
+    image: ghcr.io/tecnativa/docker-socket-proxy:latest
+    pull: true
+    restart_policy: unless-stopped
+    ports:
+      - 127.0.0.1:2375:2375
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    env:
+      CONTAINERS: "1" # Allow access to viewing containers
+      SERVICES: "1" # Allow access to viewing services (necessary when using Docker Swarm)
+      TASKS: "1" # Allow access to viewing tasks (necessary when using Docker Swarm)
+      POST: "0" # Disallow any POST operations (effectively read-only)
+    networks:
+      - name: homelab
+
+- name: Homepage container
+  community.docker.docker_container:
+    name: homepage
+    image: ghcr.io/gethomepage/homepage:latest
+    pull: true
+    restart_policy: unless-stopped
+    volumes:
+      - "{{ homepage_mount_dir }}/config:/app/config"
+    env:
+      HOMEPAGE_ALLOWED_HOSTS: "homepage.{{ domain }}"
+      PUID: "{{ homepage_uid }}" 
+      PGID: "{{ homepage_gid }}"
+    networks  :
+      - name: homelab
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.homepage.rule: "Host(`homepage.{{ domain }}`)"
+      traefik.http.routers.homepage.tls: "true"
+      traefik.http.routers.homepage.tls.certresolver: "letsencrypt"
+      traefik.http.services.homepage.loadbalancer.server.port: "3000"

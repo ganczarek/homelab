@@ -44,3 +44,7 @@
       traefik.http.middlewares.authelia.forwardAuth.address: 'http://authelia:9091/api/authz/forward-auth'
       traefik.http.middlewares.authelia.forwardAuth.trustForwardHeader: 'true'
       traefik.http.middlewares.authelia.forwardAuth.authResponseHeaders: 'Remote-User,Remote-Groups,Remote-Email,Remote-Name'
+      homepage.group: Security
+      homepage.name: Authelia
+      homepage.href: https://authelia.{{ domain }}/
+      homepage.icon: sh-authelia

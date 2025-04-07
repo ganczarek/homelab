@@ -84,4 +84,7 @@
       traefik.http.middlewares.traefik-dashboard-redirect.redirectregex.regex: '^(https:\/\/(\[[\w:.]+\]|[\w\._-]+)(:\d+)?)\/$'
       traefik.http.middlewares.traefik-dashboard-redirect.redirectregex.replacement: "${1}/dashboard/"
       traefik.http.middlewares.traefik-dashboard-redirect.redirectregex.permanent: "true"
-
+      homepage.group: Networking
+      homepage.name: Traefik
+      homepage.href: https://traefik.{{ domain }}/
+      homepage.icon: sh-traefik

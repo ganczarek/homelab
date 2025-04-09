@@ -1,0 +1,24 @@
+---
+
+- name: Dozzle container
+  community.docker.docker_container:
+    name: dozzle
+    image: amir20/dozzle:latest
+    pull: always
+    restart_policy: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    env:
+      DOZZLE_AUTH_PROVIDER: forward-proxy
+    networks:
+      - name: homelab
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.dozzle.rule: "Host(`dozzle.{{ domain }}`)"
+      traefik.http.routers.dozzle.tls: "true"
+      traefik.http.routers.dozzle.tls.certresolver: "letsencrypt"
+      traefik.http.routers.dozzle.middlewares: "authelia"
+      homepage.group: Monitoring
+      homepage.name: Dozzle
+      homepage.href: https://dozzle.{{ domain }}/
+      homepage.icon: sh-dozzle

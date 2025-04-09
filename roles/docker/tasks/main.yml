@@ -54,3 +54,6 @@
     dest: "/etc/docker/daemon.json"
   notify:
     - restart docker
+
+- name: Deploy Dozzle
+  include_tasks: dozzle.yml

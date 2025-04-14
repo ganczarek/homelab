@@ -64,14 +64,14 @@
     volumes:
       - "{{ homepage_mount_dir }}/config:/app/config"
     env:
-      HOMEPAGE_ALLOWED_HOSTS: "homepage.{{ domain }}"
+      HOMEPAGE_ALLOWED_HOSTS: "homepage.{{ domain }},{{ domain }}"
       PUID: "{{ homepage_uid }}" 
       PGID: "{{ homepage_gid }}"
     networks  :
       - name: homelab
     labels:
       traefik.enable: "true"
-      traefik.http.routers.homepage.rule: "Host(`homepage.{{ domain }}`)"
+      traefik.http.routers.homepage.rule: "Host(`homepage.{{ domain }}`) || Host(`{{ domain }}`)"
       traefik.http.routers.homepage.tls: "true"
       traefik.http.routers.homepage.tls.certresolver: "letsencrypt"
       traefik.http.services.homepage.loadbalancer.server.port: "3000"

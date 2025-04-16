@@ -1,0 +1,4 @@
+---
+
+# Run playbook with '-e ldap_force_bootstrap=true' to recreate LDAP volume
+ldap_force_bootstrap: false

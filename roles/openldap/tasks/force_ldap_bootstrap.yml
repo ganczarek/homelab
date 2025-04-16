@@ -1,0 +1,11 @@
+---
+
+- name: Remove OpenLDAP container
+  community.docker.docker_container:
+    name: openldap
+    state: absent
+ 
+- name: Remove OpenLDAP volume
+  community.docker.docker_volume:
+    name: openldap
+    state: absent

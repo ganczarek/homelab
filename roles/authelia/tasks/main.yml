@@ -10,7 +10,6 @@
     - "{{ authelia_mount_dir }}/config"
     - "{{ authelia_mount_dir }}/logs"
 
-
 - name: Create Authelia configuration file
   template:
     src: "templates/{{ item }}.j2"
@@ -18,7 +17,6 @@
     mode: "0644"
   loop:
     - "configuration.yml"
-    - "users.yml"
   register: restart_authelia_container
 
 - name: Deploy Authelia Docker container

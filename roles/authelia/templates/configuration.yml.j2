@@ -9,18 +9,24 @@ log:
   keep_stdout: true
 
 authentication_backend:
-  file:
-    path: "/config/users.yml"
-    watch: true
-    password:
-      algorithm: "argon2"
-      argon2:
-        variant: "argon2id"
-        iterations: 10
-        memory: 65535
-        parallelism: 4
-        key_length: 32
-        salt_length: 16
+  ldap:
+    address: 'ldap://openldap:{{ ldap_port }}'
+    implementation: 'custom'
+    timeout: '5s'
+    start_tls: false
+    base_dn: '{{ ldap_base_dn }}'
+    additional_users_dn: 'OU=users'
+    users_filter: '(&(|({username_attribute}={input})({mail_attribute}={input}))(objectClass=person))'
+    additional_groups_dn: 'OU=groups'
+    groups_filter: '(&(member=UID={input},OU=users,{{ ldap_base_dn }})(objectClass=groupOfNames))'
+    user: 'CN=admin,{{ ldap_base_dn }}'
+    password: '{{ ldap_admin_password }}'
+    attributes:
+      distinguished_name: 'distinguishedName'
+      username: 'uid'
+      mail: 'mail'
+      member_of: 'memberOf'
+      group_name: 'cn'
 
 access_control:
   default_policy: "deny"

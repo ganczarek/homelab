@@ -1,0 +1,64 @@
+---
+
+- name: Force bootstrap
+  include_tasks: force_ldap_bootstrap.yml
+  when: "ldap_force_bootstrap | default(false)"
+
+- name: Create openldap volume
+  community.docker.docker_volume:
+    name: openldap
+
+- name: Create OpenLDAP container
+  community.docker.docker_container:
+    name: openldap
+    image: bitnami/openldap:2.5.19
+    pull: always
+    restart_policy: unless-stopped
+    networks:
+      - name: homelab
+    volumes:
+      - "openldap:/bitnami/openldap"
+    ports:
+      # bind LDAP port to localhost to prevent access from outside but let Ansible use it
+      - "127.0.0.1:{{ ldap_port }}:{{ ldap_port }}"
+    env:
+      LDAP_PORT_NUMBER: "{{ ldap_port }}"
+      LDAP_ROOT: "{{ ldap_base_dn }}"
+      LDAP_ADMIN_USERNAME: "admin"
+      LDAP_ADMIN_PASSWORD: "{{ ldap_admin_password }}"
+      LDAP_SKIP_DEFAULT_TREE: "yes"
+    
+# phpLDAPadmin v2 is under development, but it's useful for read access
+- name: Create phpLDAPadmin container
+  community.docker.docker_container:
+    name: phpldapadmin
+    image: phpldapadmin/phpldapadmin:2.1
+    pull: always
+    restart_policy: unless-stopped
+    networks:
+      - name: homelab
+    env:
+      APP_KEY: "{{ phpldapadmin_app_key }}"
+      APP_URL: https://phpldapadmin.{{ domain }}/
+      APP_TIMEZONE: "{{ tz }}"
+      LDAP_NAME: "OpenLDAP"
+      LDAP_HOST: "openldap"
+      LDAP_PORT: "{{ ldap_port}}"
+      LDAP_BASE_DN: "{{ ldap_base_dn}}"
+      LDAP_PASSWORD: "{{ ldap_admin_password }}"
+      LDAP_USERNAME: "cn=admin,{{ ldap_base_dn }}"
+      LDAP_LOGIN_OBJECTCLASS: "person"
+      LDAP_ALLOW_GUEST: "false"
+    labels:
+      traefik.enable: "true"
+      traefik.http.routers.phpldapadmin.rule: "Host(`phpldapadmin.{{ domain }}`)"
+      traefik.http.routers.phpldapadmin.tls: "true"
+      traefik.http.routers.phpldapadmin.tls.certresolver: "letsencrypt"
+      traefik.http.services.phpldapadmin.loadbalancer.server.port: "8080"
+      homepage.group: Security
+      homepage.name: phpLDAPadmin
+      homepage.href: https://phpldapadmin.{{ domain }}/
+      homepage.icon: https://repository-images.githubusercontent.com/3665191/dd213f80-766c-11e9-8117-6b639095ef99
+
+- name: Configure LDAP
+  include_tasks: ldap_config.yml

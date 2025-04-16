@@ -1,0 +1,64 @@
+- name: Create OpenLDAP auth args
+  set_fact:
+    ldap_auth:
+      bind_dn: "cn=admin,{{ ldap_base_dn }}"
+      bind_pw: "{{ ldap_admin_password }}"
+      server_uri: "ldap://localhost:{{ ldap_port }}"
+
+- name: Create root DN in LDAP
+  args: "{{ ldap_auth }}"
+  community.general.ldap_entry:
+    dn: "{{ ldap_base_dn }}"
+    state: present
+    objectClass:
+      - dcObject
+      - organization
+    attributes:
+      o: Homelab
+
+- name: Create OU=users in LDAP
+  args: "{{ ldap_auth }}"
+  community.general.ldap_entry:
+    dn: "ou=users,{{ ldap_base_dn }}"
+    state: present
+    objectClass:
+      - organizationalUnit
+
+- name: Create OU=groups in LDAP
+  args: "{{ ldap_auth }}"
+  community.general.ldap_entry:
+    dn: "ou=groups,{{ ldap_base_dn }}"
+    state: present
+    objectClass:
+      - organizationalUnit
+
+- name: Create users in LDAP
+  args: "{{ ldap_auth }}"
+  community.general.ldap_entry:
+    dn: "cn={{ item.key }},ou=users,{{ ldap_base_dn }}"
+    state: present
+    objectClass:
+      - inetOrgPerson # required: cn, sn
+      - person        # required: cn, sn
+    attributes:
+      cn: "{{ item.key }}"
+      sn: "{{ item.key }}"
+      uid: "{{ item.key }}"
+      userPassword: "{{ item.value }}"
+  loop: "{{ ldap_users | dict2items }}"
+  no_log: true
+
+- name: Update user attributes in LDAP
+  args: "{{ ldap_auth }}"
+  community.general.ldap_attrs:
+    dn: "cn={{ item.key }},ou=users,{{ ldap_base_dn }}"
+    attributes:
+      cn: "{{ item.key }}"
+      sn: "{{ item.key }}"
+      uid: "{{ item.key }}"
+      # TODO: hash user password
+      userPassword: "{{ item.value }}"
+    state: exact
+  loop: "{{ ldap_users | dict2items }}"
+  no_log: true
+    

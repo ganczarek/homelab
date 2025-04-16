@@ -9,6 +9,12 @@ authelia_storage_encryption_key: "{{ lookup('env', 'authelia_storage_encryption_
 authelia_session_secret: "{{ lookup('env', 'authelia_session_secret') }}"
 tailscale_auth_key: "{{ lookup('env', 'rpi4_tailscale_auth_key') }}"
 
+phpldapadmin_app_key: "{{ lookup('env', 'phpldapadmin_app_key') }}"
+ldap_admin_password: "{{ lookup('env', 'ldap_admin_password') }}"
+ldap_users: "{{ lookup('env', 'ldap_users') }}"
+ldap_port: "1389"
+ldap_base_dn: "dc=ganczarek,dc=info"
+
 ssd_mount: /media/DataSSD
 docker_mounts_dir: "{{ ssd_mount }}/docker-mounts"
 

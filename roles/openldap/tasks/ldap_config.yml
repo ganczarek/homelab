@@ -40,12 +40,18 @@
     objectClass:
       - inetOrgPerson # required: cn, sn
       - person        # required: cn, sn
+      - posixAccount  # required: cn, gidNumber, homeDirectory, uidNumber, uid
     attributes:
       cn: "{{ item.key }}"
       sn: "{{ item.key }}"
       uid: "{{ item.key }}"
       userPassword: "{{ item.value }}"
+      uidNumber: "{{ 3000 + index }}"
+      gidNumber: "{{ 4000 + index }}"
+      homeDirectory: "/home/{{ item.key }}"
   loop: "{{ ldap_users | dict2items }}"
+  loop_control:
+    index_var: index
   no_log: true
 
 - name: Update user attributes in LDAP
@@ -58,7 +64,12 @@
       uid: "{{ item.key }}"
       # TODO: hash user password
       userPassword: "{{ item.value }}"
+      uidNumber: "{{ 3000 + index }}"
+      gidNumber: "{{ 4000 + index }}"
+      homeDirectory: "/home/{{ item.key }}" 
     state: exact
   loop: "{{ ldap_users | dict2items }}"
+  loop_control:
+    index_var: index
   no_log: true
     

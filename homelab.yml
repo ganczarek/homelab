@@ -16,6 +16,8 @@
         docker_users: ["{{ ansible_user }}"]
     - role: openldap
       tags: [ openldap ]
+    - role: sssd
+      tags: [ sssd ]
     - role: authelia
       tags: [ authelia ]
     - role: traefik

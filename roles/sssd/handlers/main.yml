@@ -1,0 +1,28 @@
+---
+
+- name: stop sssd
+  ansible.builtin.service:
+    name: sssd
+    state: stopped
+  listen: restart sssd
+
+- name: delete sssd cache
+  ansible.builtin.file:
+    path: "/var/lib/sss/db/{{ item }}"
+    state: absent
+  with_items:
+    - "cache_{{ domain }}.ldb"
+    - config.ldb
+    - sssd.ldb
+    - "timestamps_{{ domain }}.ldb"
+  listen: restart sssd
+
+- name: start sssd
+  ansible.builtin.service:
+    name: sssd
+    state: started
+  listen: restart sssd
+
+- name: update pam auth
+  shell: pam-auth-update --package --enable mkhomedir
+

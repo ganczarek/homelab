@@ -1,0 +1,148 @@
+#--------------------------------------------- 
+# System Security Services Daemon (SSSD) configuration 
+#--------------------------------------------- 
+[sssd]
+config_file_version = 2
+
+# Trace Fatal(0x0010), Critical(0x0020), Serious(0x0040), Minor(0x0080), Config(0x0100) and Operation(0x0400) messages
+# Can also be a number between 0 and 9
+# check /var/log/sssd/sssd.log 
+debug_level=0x17F0
+
+# the supported services 
+services = nss, pam
+
+# The associated domains (only one here) 
+domains = {{ domain }}
+
+
+
+#---------------------------------------------
+# Name Service Switch (NSS) configuration
+#
+# Don't lookup root on the LDAP server so it's still
+# possible to log as root even if LDAP is not available
+#---------------------------------------------
+[nss]
+# Trace Fatal(0x0010), Critical(0x0020), Serious(0x0040), Minor(0x0080), Config(0x0100) and Operation(0x0400) messages
+# check /var/log/sssd/sssd_nss.log
+debug_level=0x17F0
+
+reconnection_retries = 3
+
+# Don't get the root group from LDAP
+filter_groups = root
+
+# Don't get the root user from LDAP
+filter_users = root
+
+# The default Home dir
+homedir_substring = /home
+
+# The home dir to use if there is none configured in LDAP
+fallback_homedir = /home/%u
+
+# The default shell to use if none is configured in LDAP or does not exist
+shell_fallback = /bin/bash
+
+
+
+#---------------------------------------------
+# Pluggable Authentication Module (PAM) configuration
+#---------------------------------------------
+[pam]
+# Trace Fatal(0x0010), Critical(0x0020), Serious(0x0040), Minor(0x0080), Config(0x0100) and Operation(0x0400) messages
+# check /var/log/sssd/sssd_pam.log
+debug_level=0x17F0
+
+reconnection_retries = 3
+
+# The verbosity level (the higher, the more messages will be printed on the user console)
+# 0: none
+# (1): important messages
+# 2: informational messages
+# 3: all messages and debug informations
+pam_verbosity = 1
+
+
+
+#---------------------------------------------
+# SUDO service configuration
+#---------------------------------------------
+[sudo]
+# Trace Fatal(0x0010), Critical(0x0020), Serious(0x0040), Minor(0x0080), Config(0x0100) and Operation(0x0400) messages
+# check /var/log/sssd/sssd_sudo.log
+debug_level=0x17F0
+
+reconnection_retries = 3
+
+
+
+#---------------------------------------------
+# SSH service configuration
+#---------------------------------------------
+[ssh]
+# Trace Fatal(0x0010), Critical(0x0020), Serious(0x0040), Minor(0x0080), Config(0x0100) and Operation(0x0400) messages
+# check /var/log/sssd/sssd_ssh.log
+debug_level=0x17F0
+
+reconnection_retries = 3
+
+
+
+#--------------------------------------------- 
+# The SYMAS domain 
+#--------------------------------------------- 
+[domain/{{ domain }}] 
+# Trace Fatal(0x0010), Critical(0x0020), Serious(0x0040), Minor(0x0080), Config(0x0100) and Operation(0x0400) messages 
+# check /var/log/sssd/sssd_{{ domain }}.log 
+debug_level=0x17F0 
+
+reconnection_retries = 3
+
+# Allow the system to cache credentials so that a user can always login on the machine even if not being
+# able to contact the remote LDAP server 
+cache_credentials = True 
+
+# Define the range of UID we are going to fetch from the LDAP server 
+min_id = 1000 
+max_id = 20000 
+
+# Providers mapped to ldap 
+id_provider = ldap
+auth_provider = ldap
+#access_provider = ldap
+#chpass_provider = ldap
+#autofs_provider = ldap
+#sudo_provider = ldap
+
+# LDAP config (see https://linux.die.net/man/5/sssd-ldap)
+ldap_uri = ldap://127.0.0.1:{{ ldap_port }} 
+ldap_default_bind_dn = cn=admin,{{ ldap_base_dn }}
+ldap_default_authtok_type = password
+ldap_default_authtok = {{ ldap_admin_password }}
+ldap_search_base = {{ ldap_base_dn }}
+ldap_access_filter = (objectClass=posixAccount) 
+ldap_user_search_base = ou=users,{{ ldap_base_dn }}?subtree?(objectclass=posixAccount) 
+ldap_group_search_base = ou=groups,{{ ldap_base_dn }}?subtree?(objectclass=posixGroup) 
+ldap_sudo_search_base = ou=users,{{ ldap_base_dn }} 
+
+# Expect the schema used in the LDAP server to be RFC2307Bis 
+ldap_schema = rfc2307bis 
+
+# LDAP attributeType mapping
+ldap_user_object_class = posixAccount
+ldap_user_name = uid
+ldap_user_uid_number = uidNumber 
+ldap_user_gid_number = gidNumber 
+ldap_user_gecos = sn 
+ldap_user_home_directory = homeDirectory 
+ldap_user_fullname = cn 
+ldap_group_object_class = posixGroup 
+ldap_group_name = cn 
+ldap_group_gid_number = gidNumber 
+ldap_group_member = member
+
+# TLS configuration 
+ldap_tls_reqcert = demand
+ldap_id_use_start_tls = false

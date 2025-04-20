@@ -42,3 +42,7 @@
     - role: secured
       vars:
         secured_user: "{{ ansible_user }}"
+    - role: docker
+      tags: [ docker ]
+      vars:
+        docker_users: ["{{ ansible_user }}"]

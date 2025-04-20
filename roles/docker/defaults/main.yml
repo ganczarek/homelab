@@ -1,1 +1,2 @@
 docker_users: []
+docker_root: "/var/lib/docker"

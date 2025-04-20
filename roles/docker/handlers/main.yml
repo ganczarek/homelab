@@ -1,10 +1,11 @@
 ---
 
+# needs to be before 'restart docker' handler to run first
+- name: 'systemd daemon reload'
+  ansible.builtin.systemd_service:
+    daemon_reload: true
+
 - name: 'restart docker'
   service:
     name: 'docker'
     state: 'restarted'
-
-- name: 'systemd daemon reload'
-  ansible.builtin.systemd_service:
-    daemon_reload: true

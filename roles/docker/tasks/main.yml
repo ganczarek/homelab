@@ -1,10 +1,50 @@
 ---
 
-- name: Install Docker packages
+- name: Uninstall old Docker packages
   ansible.builtin.package:
     name:
       - docker
       - docker-compose
+    state: absent
+
+- name: Create /etc/apt/keyrings directory
+  ansible.builtin.file:
+    path: "/etc/apt/keyrings"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: Download Docker GPG key
+  ansible.builtin.get_url:
+    url: "https://download.docker.com/linux/ubuntu/gpg"
+    dest: "/etc/apt/keyrings/docker.asc"
+    mode: 0644
+
+# On Odroid XU4 (Ubuntu 24.04) ansible_architecture == 'armv7l'
+# Use dpkg to get expected 'armhf' architecture 
+- name: Get Debian architecture
+  command: dpkg --print-architecture
+  register: deb_arch
+  changed_when: false
+
+- name: Add Docker repository to Apt sources
+  ansible.builtin.apt_repository:
+    repo: deb [arch={{ deb_arch.stdout }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ ansible_distribution_release }} stable
+    state: present
+
+- name: Update package index
+  ansible.builtin.apt:
+    update_cache: true
+
+- name: Install Docker packages
+  ansible.builtin.package:
+    name:
+      - docker-ce
+      - docker-ce-cli
+      - containerd.io
+      - docker-compose-plugin
+      - python3-requests # needed by community.docker.docker_network
     state: present
 
 - name: Ensure Docker group exists
@@ -57,3 +97,5 @@
 
 - name: Deploy Dozzle
   include_tasks: dozzle.yml
+  # TODO: move Dozzle elsewhere
+  when: inventory_hostname == 'rpi4'

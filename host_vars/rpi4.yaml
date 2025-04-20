@@ -1,8 +1,5 @@
 ---
 
-ansible_python_interpreter: /usr/bin/python3
-
-ansible_user: pi
 cloudflare_dns_api_token: "{{ lookup('env', 'cloudflare_dns_api_token')}}"
 authelia_jwt_secret: "{{ lookup('env', 'authelia_jwt_secret') }}" 
 authelia_storage_encryption_key: "{{ lookup('env', 'authelia_storage_encryption_key') }}" 

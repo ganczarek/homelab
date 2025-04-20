@@ -6,7 +6,7 @@
     tailscale_ip: "{{ ansible_facts.tailscale0.ipv4.address }}"
     local_ip: "{{ ansible_facts.default_ipv4.address }}"
   roles:
-    - role: secured_rpi
+    - role: secured
       vars:
         secured_user: "{{ ansible_user }}"
     - role: docker
@@ -32,4 +32,13 @@
       tags: [ tailscale ]
     - role: homepage
       tags: [ homepage ]
-      
+
+- hosts: xu4
+  become: true
+  vars:
+    tailscale_ip: "{{ ansible_facts.tailscale0.ipv4.address }}"
+    local_ip: "{{ ansible_facts.default_ipv4.address }}"
+  roles:
+    - role: secured
+      vars:
+        secured_user: "{{ ansible_user }}"
